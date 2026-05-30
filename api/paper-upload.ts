@@ -16,9 +16,18 @@ const upload = multer({
   limits: { fileSize: 35 * 1024 * 1024 }
 });
 
-async function getPdfParse() {
-  const mod = await import("pdf-parse");
-  return (mod as any).default || mod;
+async function extractPdfText(buffer: Buffer): Promise<string> {
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const loadingTask = (pdfjsLib as any).getDocument({ data: new Uint8Array(buffer) });
+  const pdf = await loadingTask.promise;
+  let fullText = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const strings = content.items.map((item: any) => item.str);
+    fullText += strings.join(" ") + "\n";
+  }
+  return fullText.trim();
 }
 
 function runMiddleware(req: any, res: any, fn: any) {
@@ -28,10 +37,6 @@ function runMiddleware(req: any, res: any, fn: any) {
       return resolve(result);
     });
   });
-}
-
-function getCleanText(parseResult: any): string {
-  return parseResult && parseResult.text ? parseResult.text.trim() : "";
 }
 
 async function parseJsonBody(req: any): Promise<any> {
@@ -52,25 +57,22 @@ async function parseJsonBody(req: any): Promise<any> {
 async function handlePdfUpload(req: any, res: any) {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "No PDF file uploaded. Please double check file format." });
+      return res.status(400).json({ error: "No PDF file uploaded." });
     }
 
-    const pdfParse = await getPdfParse();
-
-    let parseResult;
+    let textContent = "";
     try {
-      parseResult = await pdfParse(req.file.buffer);
+      textContent = await extractPdfText(req.file.buffer);
     } catch (parseError: any) {
       console.error("PDF Parsing error:", parseError);
       return res.status(422).json({ 
-        error: `Failed to extract text from PDF. File might be corrupted or standard layout matches failed: ${parseError.message || parseError}` 
+        error: `Failed to extract text from PDF: ${parseError.message || parseError}` 
       });
     }
 
-    const textContent = getCleanText(parseResult);
     if (textContent.length < 150) {
       return res.status(422).json({
-        error: "Insufficient text content extracted from the PDF. It might be scan-only or image-only without OCR encoding."
+        error: "Insufficient text content extracted from the PDF. It might be scan-only or image-only."
       });
     }
 
@@ -92,7 +94,7 @@ async function handlePdfUpload(req: any, res: any) {
 
   } catch (err: any) {
     console.error("PDF Upload analysis failure:", err);
-    return res.status(500).json({ error: err.message || "An unexpected error occurred during paper analysis." });
+    return res.status(500).json({ error: err.message || "An unexpected error occurred." });
   }
 }
 
@@ -112,26 +114,23 @@ async function handleArxivUrl(req: any, res: any) {
     try {
       paperData = await fetchArxivPaper(cleanId);
     } catch (fetchErr: any) {
-      console.error("arXiv Retrieval error:", fetchErr);
       return res.status(422).json({ 
-        error: `Could not retrieve paper details from arXiv: ${fetchErr.message || fetchErr}` 
+        error: `Could not retrieve paper from arXiv: ${fetchErr.message || fetchErr}` 
       });
     }
 
     const { title, authors, abstract, publishedDate, pdfBuffer } = paperData;
-    const pdfParse = await getPdfParse();
 
-    let parseResult;
+    let textContent = "";
     try {
-      parseResult = await pdfParse(pdfBuffer);
+      textContent = await extractPdfText(pdfBuffer);
     } catch (parseError: any) {
       console.error("arXiv PDF parse failure:", parseError);
       return res.status(422).json({
-        error: `Failed to extract text from the arXiv PDF download: ${parseError.message || parseError}`
+        error: `Failed to extract text from arXiv PDF: ${parseError.message || parseError}`
       });
     }
 
-    const textContent = getCleanText(parseResult);
     const effectiveText = textContent.length > 200 
       ? textContent 
       : `${title}\n\nAbstract: ${abstract}`;
@@ -156,7 +155,7 @@ async function handleArxivUrl(req: any, res: any) {
 
   } catch (err: any) {
     console.error("arXiv analysis pipeline error:", err);
-    return res.status(500).json({ error: err.message || "An unexpected error occurred during arXiv paper analysis." });
+    return res.status(500).json({ error: err.message || "An unexpected error occurred." });
   }
 }
 
