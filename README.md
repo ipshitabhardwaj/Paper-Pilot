@@ -13,9 +13,7 @@
 </p>
 
 <p>
-  <a href="https://paperpilot.vercel.app"><strong>🚀 Live Demo</strong></a> ·
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#getting-started"><strong>Getting Started</strong></a>
+  <a href="https://paperpilot-research.vercel.app/"><strong>🚀 Live Demo</strong></a> ·
 </p>
 
 </div>
@@ -115,6 +113,7 @@ Open `http://localhost:3000`
 ---
 
 ## Project Structure
+```
 paperpilot/
 ├── api/                    # Vercel serverless functions
 │   ├── paper-upload.ts     # PDF upload + arXiv analysis endpoint
@@ -134,7 +133,7 @@ paperpilot/
 │       └── arxiv-search.ts # Related papers search
 ├── server.ts               # Express dev server
 └── vercel.json             # Vercel routing config
-
+```
 ---
 
 ## How It Works
