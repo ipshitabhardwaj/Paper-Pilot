@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { XMLParser } from "fast-xml-parser";
-import { parseArxivId } from "../src/lib/arxiv";
+import { parseArxivId } from "./arxiv";
 
 export default async function handler(req: Request, res: Response) {
   if (req.method !== "POST") {

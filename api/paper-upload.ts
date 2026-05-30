@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import multer from "multer";
-import { parseArxivId, fetchArxivPaper } from "../src/lib/arxiv";
-import { searchRelatedPapers } from "../src/lib/arxiv-search";
-import { analyzeScientificPaper } from "../src/lib/gemini";
+import { parseArxivId, fetchArxivPaper } from "./arxiv";
+import { searchRelatedPapers } from "./arxiv-search";
+import { analyzeScientificPaper } from "./gemini";
 
 export const config = {
   api: {
