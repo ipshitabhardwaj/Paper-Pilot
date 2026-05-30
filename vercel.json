@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    { "source": "/api/paper/upload", "destination": "/api/paper-upload" },
+    { "source": "/api/paper/arxiv-metadata", "destination": "/api/arxiv-metadata" },
+    { "source": "/api/paper/chat", "destination": "/api/chat" }
+  ],
+  "functions": {
+    "api/*.ts": {
+      "maxDuration": 60
+    }
+  }
+}
