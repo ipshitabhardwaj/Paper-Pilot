@@ -12,10 +12,6 @@
   <img src="https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=flat-square&logo=vercel&logoColor=white" />
 </p>
 
-<p>
-  <a href="https://paperpilot-research.vercel.app/"><strong>🚀 Live Demo</strong></a> ·
-</p>
-
 </div>
 
 ---
